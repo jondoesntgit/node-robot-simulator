@@ -1,0 +1,11 @@
+{
+  "name": "robot-simulator",
+  "version": "0.0.0",
+  "description": "A simulator for Miramonte Tech Club to familiarize students with Python",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jonathan Wheeler",
+  "license": "ISC"
+}
