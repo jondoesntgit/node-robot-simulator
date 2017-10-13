@@ -5,6 +5,7 @@ var ObjectID = mongodb.ObjectID;
 
 var app = express();
 app.use(bodyParser.json());
+app.use(express.static('public'));
 
 var robots  = {}
 
