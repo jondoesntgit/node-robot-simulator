@@ -2,17 +2,16 @@ var express = require("express");
 var bodyParser = require("body-parser");
 var mongodb = require("mongodb");
 var ObjectID = mongodb.ObjectID;
-var mustacheExpress = require('mustache-express');
+
 
 port = 8080;
 
 var app = express();
 
-// Register '.mustache' extension with The Mustache Express
-app.engine('mustache', mustacheExpress());
+app.set('views', __dirname + '/views')
+app.set('view engine', 'jade')
+//app.use(express.logger('dev'))
 
-app.set('view engine', 'mustache');
-app.set('views', __dirname + '/views');
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
@@ -27,7 +26,7 @@ app.all('/', function(req, res, next) {
 var robots  = {}
 
 
-var server = app.listen(port, function () {
+var server = app.listen(port , function () {
     var port = server.address().port;
     console.log("App now running on port", port);
 });
@@ -35,6 +34,10 @@ var server = app.listen(port, function () {
 app.get("/", function(req, res){
     res.status(200).json(robots);
 })
+
+app.get("/view", function (req, res){
+    res.render('svg', {})
+});
 
 app.get("/svg", function(req, res){
    html = '<svg width="640" height="480">'
