@@ -2,20 +2,11 @@ doctype
 head 
   link(rel='stylesheet', href='/css/robots.css')
   script(src="http://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js")
+  script(src="/js/snap.svg-min.js")
+  script(src="/js/socket.io.js")
+
 
 body
-  svg(width="200px" height="200px" viewBox="-100 -100 200 200")
-    circle(id="my-element" cx="0" cy="0" r="10" transform="translate(50,0)")
-    rect(x="-100" y="-100" width="200" height="200" class="border")
-    circle(id="animateTransform" cx="-20" cy="-20" r="10")
+  svg(id="svg")
 
-  script.
-    var myElement = $('#my-element').get(0);
-    var xforms = myElement.transform.baseVal;
-    var firstXForm = xforms.getItem(0);
-    if (firstXForm.type == SVGTransform.SVG_TRANSFORM_TRANSLATE){
-        var firstX = firstXForm.matrix.e,
-            firstY = firstXForm.matrix.f;
-    }
-
-    myElement.transform.baseVal.getItem(0).setTranslate(30, 100);
+  script(src="/js/robots-svg.js")

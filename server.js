@@ -2,16 +2,29 @@ var express = require("express");
 var bodyParser = require("body-parser");
 var mongodb = require("mongodb");
 var ObjectID = mongodb.ObjectID;
+var socketIO = require('socket.io');
 
 
 port = 8080;
+var robots  = {};
 
 var app = express();
+var server = require('http').createServer(app);
+var io = socketIO(server);
+io.on('connection', function(){console.log('Connection')});
+server.listen(port)
 
 app.set('views', __dirname + '/views')
 app.set('view engine', 'jade')
 //app.use(express.logger('dev'))
 
+setInterval( ()=>{
+    io.emit('move', {
+        id: 10,
+        x: Math.random()*30,
+        y: Math.random()*30
+    })
+}, 2000)
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
@@ -22,14 +35,6 @@ app.all('/', function(req, res, next) {
   next();
  });
 
-
-var robots  = {}
-
-
-var server = app.listen(port , function () {
-    var port = server.address().port;
-    console.log("App now running on port", port);
-});
 
 app.get("/", function(req, res){
     res.status(200).json(robots);

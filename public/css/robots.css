@@ -3,3 +3,7 @@
       fill:green;
       stroke:black;
     }
+
+    line {
+        stroke: #000;
+    }
