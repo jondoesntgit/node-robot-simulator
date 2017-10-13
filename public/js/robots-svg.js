@@ -1,46 +1,45 @@
 var socket = io('/');
-var s = Snap("#svg", 800, 600)
+var s = Snap("#svg")
 
-var robots = {}
 
 vectorLength = 30
+robot_radius = 5
+pickup_radius = 30
+var robots = {}
+var particles = {}
+particleRadius = 2
 
-var bigCircle = s.circle(150, 150, 10);
 
-bigCircle.attr({
-    fill: "#bada55",
-    stroke: "#000",
-    strokeWidth: 5
+
+$.get('/robots', (robots_data) => {
+    for (id in robots_data) {
+        robot = robots_data[id]
+        robots[id] = robot
+        robots[id].head = s.circle(robot.x, robot.y, robot_radius);
+        robots[id].vector = s.line(robot.x, robot.y, robot.x + vectorLength * Math.cos(robot.angle), robot.y + vectorLength * Math.sin(robot.angle));        
+    }
 })
 
-var head = s.circle(100, 150, 10);
-var vector = s.line(100, 150, 180, 150);
 
-robots[10] = {
-    head: head,
-    vector: vector,
-    angle: 0
-}
 
-function moveRobot(id, x, y, s) {
+function moveRobot(id, x, y, ms) {
     r = robots[id]
     r.x = x
     r.y = y
     angle = r.angle
 
-    robots[id].head.animate({cx: x, cy: y}, s)
+    robots[id].head.animate({cx: x, cy: y}, ms)
     robots[id].vector.animate({
         x1: x, 
         y1: y, 
         x2: x + vectorLength * Math.cos(angle), 
         y2: y + vectorLength * Math.sin(angle) 
-    }, s)
+    }, ms)
 }
 
 function rotateRobot(id, angle) {
     r = robots[id]
-    r.angle += angle
-    angle = r.angle
+    r.angle = angle
     x = r.x
     y = r.y
     robots[id].vector.animate({
@@ -51,12 +50,67 @@ function rotateRobot(id, angle) {
     }, 1000)
 }
 
-/*
+createParticle = (id, data) => {
+    x = data.x
+    y = data.y
+    particles[id]= s.circle(x, y, particleRadius)
+}
+
+removeParticle = (id) => {
+    particles[id].remove()
+    delete particles[id]
+}
+
 socket.on('move', function (data) {
     id = data.id
     x = data.x
     y = data.y
+    ms = data.s
     console.log(`Robot ${id} is moving to (${x}, ${y})`);
-    smallCircle.animate({cx: x, cy: y}, 1000)
+    moveRobot(id, x, y, ms)
 });
-*/
+
+socket.on('rotate', function (data) {
+    id = data.id
+    angle = data.angle
+    ms = data.s
+    console.log(`Robot ${id} is rotating to (${angle})`);
+    rotateRobot(id, angle, ms)
+});
+
+socket.on('pickup', function(data){
+    robot = robots[data.id]
+    x = robot.x
+    y = robot.y
+    pickupCircle = s.circle(x, y, 0).attr({
+        color: '#F00'
+    })
+    pickupCircle.animate({r: pickup_radius}, 400)
+    setTimeout(() => {
+        pickupCircle.animate({r: 0}, 400)
+    }, 1000)
+    setTimeout(() => {
+        pickupCircle.remove()
+    }, 1400)
+})
+
+socket.on('init', (data) => {
+    id = data.id
+    robot = data
+    robots[id] = robot
+    robots[id].head = s.circle(robot.x, robot.y, robot_radius);
+    robots[id].vector = s.line(robot.x, robot.y, robot.x + vectorLength * Math.cos(robot.angle), robot.y + vectorLength * Math.sin(robot.angle));        
+
+})
+
+socket.on('particle', (data) => {
+    for (id in data) {
+        if (id in particles) {continue}
+        createParticle(id, data[id])
+    }
+
+    for (id in particles) {
+        if (id in data) {continue}
+        removeParticle(id)
+    }
+})

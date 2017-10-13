@@ -7,6 +7,13 @@ var socketIO = require('socket.io');
 
 port = 8080;
 var robots  = {};
+var particles = {};
+
+min_x = -100
+max_x = 100
+
+min_y = -100
+max_y = 100
 
 var app = express();
 var server = require('http').createServer(app);
@@ -18,13 +25,16 @@ app.set('views', __dirname + '/views')
 app.set('view engine', 'jade')
 //app.use(express.logger('dev'))
 
+/*
 setInterval( ()=>{
     io.emit('move', {
         id: 10,
         x: Math.random()*30,
-        y: Math.random()*30
+        y: Math.random()*30,
+        s: 1000
     })
 }, 2000)
+*/
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
@@ -37,6 +47,10 @@ app.all('/', function(req, res, next) {
 
 
 app.get("/", function(req, res){
+    res.status(200).json(robots);
+})
+
+app.get("/robots", function(req, res){
     res.status(200).json(robots);
 })
 
@@ -58,15 +72,83 @@ app.get("/svg", function(req, res){
    res.send(html)
 })
 
-app.get("/id/left", function(req, res) {
+app.get("/:id/left", function(req, res) {
     id = req.params.id
-    robots[id].angle += Math.pi/4
-    res.status(200).json(robots[id])
+    robots[id].angle -= Math.PI/4
+
+    io.emit('rotate', {
+        id: id,
+        angle: robots[id].angle,
+        s: 1000
+    })
+    setTimeout(()=>{
+        res.status(200).json(robots[id])
+    },1000)
+
 })
 
 app.get("/:id/right", function(req, res) {
     id = req.params.id 
-    robots[id].angle -= Math.pi/4
+    old_angle = robots[id].angle
+    robots[id].angle += Math.PI/4
+
+    io.emit('rotate', {
+        id: id,
+        angle: robots[id].angle,
+        s: 1000
+    })
+
+    setTimeout(()=>{
+        res.status(200).json(robots[id])
+    },1000)
+})
+
+app.get("/:id/pickup", function(req, res){
+    robot_id = req.params.id
+
+    pickup_radius = 30
+
+    function is_reachable(robot, particle){
+        if (!particle) return (false)
+        console.log('Removing particles')
+        console.log(robot)
+        console.log(particle)
+        dx = robot.x - particle.x
+        dy = robot.y - particle.y
+
+        in_reach = (Math.sqrt(dx**2 + dy**2) < pickup_radius)
+        console.log(in_reach)
+        return in_reach
+    }
+
+    particles_to_remove = []
+    for (id in particles){
+        if (is_reachable(robots[robot_id], particles[id])){
+            particles_to_remove.push(id)
+        }
+    }
+
+    console.log(particles_to_remove)
+
+    particles_to_remove.forEach((id) => {
+        console.log('Removing' + id)
+        delete particles[id]
+    })
+
+
+    io.emit('pickup', {
+        id: robot_id,
+    })
+
+    setTimeout(()=>{
+        for (particle_id in particles){
+            if (is_reachable(particles[particle_id], robots[id])){
+                delete particles[particle_id]
+            }
+        }
+        io.emit('particle', particles)
+    },1000)
+
     res.status(200).json(robots[id])
 })
 
@@ -74,25 +156,43 @@ app.get("/:id/forward/:distance", function(req, res) {
     id = req.params.id
     distance = req.params.distance || 10
     angle = robots[id].angle
+
+    old_x = robots[id].x
+    old_y = robots[id].y
+
     robots[id].x += Math.cos(angle) * distance
     robots[id].y += Math.sin(angle) * distance
-    if (robots[id].x > 620) {
-        robots[id].x = 620
+    if (robots[id].x > 90) {
+        robots[id].x = 90
     }
 
-    if (robots[id].x < 20) {
-        robots[id].x = 20
+    if (robots[id].x < -90) {
+        robots[id].x = -90
     }
 
-    if (robots[id].y > 460) {
-        robots[id].y = 460
+    if (robots[id].y > 90) {
+        robots[id].y = 90
     }
 
-    if (robots[id].y < 20) {
-        robots[id].y = 20
+    if (robots[id].y < -90) {
+        robots[id].y = -90
     }
 
-    res.status(200).json(robots[id])
+    pixels_per_second = 100
+    dx = old_x - robots[id].x
+    dy = old_y - robots[id].y
+    duration = 1000*Math.sqrt(dx**2 + dy**2)/pixels_per_second
+
+    io.emit('move', {
+        id : id,
+        x: robots[id].x,
+        y: robots[id].y,
+        s: duration
+    })
+
+    setTimeout(()=>{
+        res.status(200).json(robots[id])
+    },duration)
 })
 
 app.get("/:id/init", function(req, res){
@@ -102,6 +202,23 @@ app.get("/:id/init", function(req, res){
         y: 0,
         angle: 0
     }
+
+    io.emit('init', {
+        id: id,
+        x: 0,
+        y: 0,
+        angle: 0
+    })
     res.status(200).json(robots[id])
 })
 
+
+
+
+setInterval(()=>{
+    x = Math.random() * (max_x - min_x) + min_x
+    y = Math.random() * (max_y - min_y) + min_y
+    id = Date.now()
+    particles[id] = {x: x, y: y}
+    io.emit('particle', particles)
+}, 5000)
