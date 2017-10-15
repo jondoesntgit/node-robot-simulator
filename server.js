@@ -193,9 +193,11 @@ app.get("/robots/:id/pickup", function(req, res){
     }
 
     particles_to_remove = []
+    points = 0
     for (id in particles){
         if (is_reachable(robots[robot_id], particles[id])){
             particles_to_remove.push(id)
+            points += particles[id].score
         }
     }
 
@@ -206,7 +208,7 @@ app.get("/robots/:id/pickup", function(req, res){
     })
 
     oldScore = robots[robot_id].score
-    newScore = oldScore + particlesAcquired
+    newScore = oldScore + points
     robots[robot_id].score = newScore
 
 
@@ -263,6 +265,24 @@ setInterval(()=>{
     x = Math.random() * (max_x - min_x) + min_x
     y = Math.random() * (max_y - min_y) + min_y
     id = Date.now()
-    particles[id] = {x: x, y: y}
+    rand = Math.random()
+    if (rand < .4){
+        color = 'black'
+        score = 1
+        radius = 1
+    } else if (rand < .7) {
+        color = 'green'
+        score = 3
+        radius = 2
+    } else if (rand < .9) {
+        color = 'blue'
+        score = 5
+        radius = 3
+    } else {
+        color = 'red'
+        score = 10
+        radius = 4
+    }
+    particles[id] = {x: x, y: y, color: color, score: score, radius: radius}
     io.emit('particle', particles)
 }, 5000)

@@ -7,7 +7,6 @@ robot_radius = 5
 pickup_radius = 30
 var robots = {}
 var particles = {}
-particleRadius = 2
 textOffset = -10
 
 
@@ -51,7 +50,9 @@ rotateRobot = (id, angle, ms) => {
 createParticle = (id, data) => {
     x = data.x
     y = data.y
-    particles[id]= s.circle(x, y, particleRadius)
+    radius = data.radius
+    color = data.color
+    particles[id]= s.circle(x, y, radius).attr({fill: color})
 }
 
 removeParticle = (id) => {
