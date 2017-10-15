@@ -184,9 +184,6 @@ app.get("/robots/:id/pickup", function(req, res){
 
     function is_reachable(robot, particle){
         if (!particle) return (false)
-        console.log('Removing particles')
-        console.log(robot)
-        console.log(particle)
         dx = robot.x - particle.x
         dy = robot.y - particle.y
 
@@ -205,7 +202,6 @@ app.get("/robots/:id/pickup", function(req, res){
     particlesAcquired = particles_to_remove.length
 
     particles_to_remove.forEach((id) => {
-        console.log('Removing' + id)
         delete particles[id]
     })
 
@@ -231,6 +227,24 @@ app.get("/robots/:id/pickup", function(req, res){
     setTimeout(()=>{
         res.status(200).json(robots[robot_id])
     }, 1500)
+})
+
+app.get("/robots/:id/color/:color", function(req, res){
+    console.log('COLOR' + req.params.color)
+    id = req.params.id
+    color = req.params.color
+    robots[id].color = color
+    io.emit('color', {id: id, color: color})
+    res.status(200).json(robots[id])
+})
+
+app.get("/robots/:id/name/:name", function(req, res){
+    id = req.params.id
+    name = req.params.name
+    robots[id].name = name
+
+    io.emit('name', {id: id, name: name})
+    res.status(200).json(robots[id])
 })
 
 /***********************

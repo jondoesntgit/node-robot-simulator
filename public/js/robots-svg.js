@@ -13,8 +13,8 @@ textOffset = -10
 
 createRobot = (id, robot) => {
     robots[id] = robot
-    robots[id].head = s.circle(robot.x, robot.y, robot_radius);
     robots[id].vector = s.line(robot.x, robot.y, robot.x + vectorLength * Math.cos(robot.angle), robot.y + vectorLength * Math.sin(robot.angle));   
+    robots[id].head = s.circle(robot.x, robot.y, robot_radius);
     robots[id].label = s.text(robot.x, robot.y + textOffset, `${id}: ${robot.score}`).attr({"text-anchor": "middle"})
 }
 
@@ -59,6 +59,14 @@ removeParticle = (id) => {
     delete particles[id]
 }
 
+updateLabel = (id) => {
+    name = robots[id].name || id
+    score = robots[id].score || 0
+    robots[id].label.attr({
+        text: `${name}: ${score}`
+    })
+}
+
 // Start by loading all robots
 
 $.get('/robots', (robots_data) => {
@@ -83,7 +91,6 @@ socket.on('move', function (data) {
     x = data.x
     y = data.y
     ms = data.s
-    console.log(`Robot ${id} is moving to (${x}, ${y})`);
     moveRobot(id, x, y, ms)
 });
 
@@ -92,7 +99,6 @@ socket.on('rotate', function (data) {
     id = data.id
     angle = data.angle
     ms = data.s
-    console.log(`Robot ${id} is rotating to (${angle})`);
     rotateRobot(id, angle, ms)
 });
 
@@ -101,14 +107,15 @@ socket.on('pickup', function(data){
     robot = robots[data.id]
     x = robot.x
     y = robot.y
+    color = robot.color || 'black'
     pickupCircle = s.circle(x, y, 0).attr({
-        color: '#F00'
+        fill: color
     })
     pickupCircle.animate({r: pickup_radius}, 400)
     setTimeout(() => {
         pickupCircle.animate({r: 0}, 400)
         robot.score = data.newScore
-        robot.label.attr({text: `${robot.id}: ${robot.score}`})
+        updateLabel(data.id)
     }, 1000)
     setTimeout(() => {
         pickupCircle.remove()
@@ -121,6 +128,17 @@ socket.on('remove', function(data){
     robots[id].vector.remove()
     robots[id].label.remove()
     delete robots[id]
+})
+
+socket.on('name', (data) =>{
+    robots[data.id].name = data.name
+    updateLabel(data.id)
+})
+
+socket.on('color', (data) =>{
+    console.log(data)
+    robots[data.id].color = data.color
+    robots[data.id].head.attr({fill: data.color})
 })
 
 // When we hear that a new particle is being added
