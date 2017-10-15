@@ -8,39 +8,52 @@ port = 8080
 url = 'http://localhost'
 base = "%s:%s" % (url, port)
 
-id = random.randint(1, 1000)
-print("Robot ID: %i" % id)
+robot_id = random.randint(1, 1000)
+print("Robot ID: %i" % robot_id)
 
 
 def init(my_id=None):
     """Initiate a robot"""
+    global robot_id
     if not my_id:
         my_id = random.randint(1, 1000)
 
-    id = my_id
-    r = requests.get(base + '/robots/%i/init' % id)
+
+    robot_id = my_id
+    r = requests.get(base + '/robots/%i/init' % robot_id)
     return json.loads(r.text)
 
 
 def forward(distance=10):
     """Move the robot forward a small distance"""
-    r = requests.get(base + '/robots/%i/forward/%f' % (id, distance))
+    global robot_id
+    r = requests.get(base + '/robots/%i/forward/%f' % (robot_id, distance))
     return json.loads(r.text)
 
 
 def right(angle=90):
     """Rotate the robot right"""
-    r = requests.get(base + '/robots/%i/right/%f' % (id, angle))
+    global robot_id
+    r = requests.get(base + '/robots/%i/right/%f' % (robot_id, angle))
     return json.loads(r.text)
 
 
 def left(angle=90):
     """Rotate the robot left"""
-    r = requests.get(base + '/robots/%i/left/%f' % (id, angle))
+    global robot_id
+    r = requests.get(base + '/robots/%i/left/%f' % (robot_id, angle))
     return json.loads(r.text)
 
 
 def pickup():
     """Picks up any objects nearby"""
-    r = requests.get(base + '/robots/%i/pickup' % (id))
+    global robot_id
+    r = requests.get(base + '/robots/%i/pickup' % (robot_id))
+    print(r.text)
     return json.loads(r.text)
+
+
+def particles():
+    """Gets a list of all of the particles"""
+    r = requests.get(base + '/particles')
+    return json.loads(r.particles)

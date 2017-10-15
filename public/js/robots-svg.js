@@ -115,6 +115,14 @@ socket.on('pickup', function(data){
     }, 1400)
 })
 
+socket.on('remove', function(data){
+    id = data.id
+    robots[id].head.remove()
+    robots[id].vector.remove()
+    robots[id].label.remove()
+    delete robots[id]
+})
+
 // When we hear that a new particle is being added
 socket.on('particle', (data) => {
     for (id in data) {

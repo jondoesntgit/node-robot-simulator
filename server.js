@@ -88,6 +88,15 @@ app.get("/robots/:id/init", function(req, res){
     res.status(200).json(robots[id])
 })
 
+app.get("/robots/:id/remove", function(req, res){
+    id = req.params.id
+    delete robots[id]
+    io.emit('remove', {
+        id: id
+    })
+    res.status(200).json(robots)
+})
+
 // Rotate the robot left
 app.get(["/robots/:id/left", "/robots/:id/left/:angle"], function(req, res) {
     id = req.params.id 
@@ -220,9 +229,19 @@ app.get("/robots/:id/pickup", function(req, res){
     },1000)
 
     setTimeout(()=>{
-        res.status(200).json(robots[id])
+        res.status(200).json(robots[robot_id])
     }, 1500)
 })
+
+/***********************
+  * PARTICLE ENDPOINTS *
+  **********************/
+
+// Return all existing particles
+app.get("/particles", function(req, res){
+    res.status(200).json(particles);
+})
+
 
 
 // Every few seconds, create a new particle
