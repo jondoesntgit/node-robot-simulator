@@ -43,7 +43,7 @@ function moveRobot(id, x, y, ms) {
     }, ms)
 }
 
-function rotateRobot(id, angle) {
+function rotateRobot(id, angle, ms) {
     r = robots[id]
     r.angle = angle
     x = r.x
@@ -53,7 +53,7 @@ function rotateRobot(id, angle) {
         y1: y, 
         x2: x + vectorLength * Math.cos(angle), 
         y2: y + vectorLength * Math.sin(angle) 
-    }, 1000)
+    }, ms)
 }
 
 createParticle = (id, data) => {
