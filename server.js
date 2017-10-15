@@ -77,6 +77,9 @@ app.get("/svg", function(req, res){
 /* ROBOT ENDPOINTS */
 
 init = (id) => {
+    if (id in robots) {
+        return
+    }
     robot = {
         id: id,
         x: 0,
