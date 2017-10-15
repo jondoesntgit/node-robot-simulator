@@ -108,14 +108,14 @@ rotate = (id, angle, res) => {
     },250)
 }
 
-app.get("/:id/init", function(req, res){
+app.get("/robots/:id/init", function(req, res){
     id = req.params.id
     init(id)
     res.status(200).json(robots[id])
 })
 
 
-app.get(["/:id/left", "/:id/left/:angle"], function(req, res) {
+app.get(["/robots/:id/left", "/robots/:id/left/:angle"], function(req, res) {
 
     id = req.params.id 
     if (!(id in robots)){
@@ -123,24 +123,24 @@ app.get(["/:id/left", "/:id/left/:angle"], function(req, res) {
         res.status(200).json(robots[id])
         return
     }
-    angle = req.params.angle || Math.PI/4
-    angle = parseFloat(angle)
+    angle = req.params.angle || 90
+    angle = parseFloat(angle) * Math.PI / 180
     rotate(id, -angle, res)
 })
 
-app.get(["/:id/right" || "/:id/right/:angle"], function(req, res) {
+app.get(["/robots/:id/right", "/robots/:id/right/:angle"], function(req, res) {
     id = req.params.id 
     if (!(id in robots)){
         init(id)
         res.status(200).json(robots[id])
         return
     }
-    angle = req.params.angle || Math.PI/4
-    angle = parseFloat(angle)
+    angle = req.params.angle || 90
+    angle = parseFloat(angle) * Math.PI / 180
     rotate(id, angle, res)
 })
 
-app.get("/:id/pickup", function(req, res){
+app.get("/robots/:id/pickup", function(req, res){
     robot_id = req.params.id
     if (!(robot_id in robots)){
         init(robot_id)
@@ -198,7 +198,7 @@ app.get("/:id/pickup", function(req, res){
     res.status(200).json(robots[id])
 })
 
-app.get(["/:id/forward/:distance", "/:id/forward"], function(req, res) {
+app.get(["/robots/:id/forward/:distance", "/robots/:id/forward"], function(req, res) {
     id = req.params.id
     if (!(id in robots)){
         init(id)
