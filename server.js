@@ -72,8 +72,39 @@ app.get("/svg", function(req, res){
    res.send(html)
 })
 
+
+
+/* ROBOT ENDPOINTS */
+
+init = (id) => {
+    robot = {
+        id: id,
+        x: 0,
+        y: 0,
+        angle: 0,
+        score: 0
+    }
+
+    robots[id] = robot
+
+    io.emit('init', robot)
+}
+
+
+app.get("/:id/init", function(req, res){
+    id = req.params.id
+    init(id)
+    res.status(200).json(robots[id])
+})
+
+
 app.get("/:id/left", function(req, res) {
     id = req.params.id
+    if (!(id in robots)){
+        init(id)
+        res.status(200).json(robots[id])
+        return
+    }
     robots[id].angle -= Math.PI/4
 
     io.emit('rotate', {
@@ -89,6 +120,11 @@ app.get("/:id/left", function(req, res) {
 
 app.get("/:id/right", function(req, res) {
     id = req.params.id 
+    if (!(id in robots)){
+        init(id)
+        res.status(200).json(robots[id])
+        return
+    }
     old_angle = robots[id].angle
     robots[id].angle += Math.PI/4
 
@@ -105,7 +141,11 @@ app.get("/:id/right", function(req, res) {
 
 app.get("/:id/pickup", function(req, res){
     robot_id = req.params.id
-
+    if (!(robot_id in robots)){
+        init(robot_id)
+        res.status(200).json(robots[robot_id])
+        return
+    }
     pickup_radius = 30
 
     function is_reachable(robot, particle){
@@ -157,8 +197,13 @@ app.get("/:id/pickup", function(req, res){
     res.status(200).json(robots[id])
 })
 
-app.get("/:id/forward/:distance", function(req, res) {
+app.get(["/:id/forward/:distance", "/:id/forward"], function(req, res) {
     id = req.params.id
+    if (!(id in robots)){
+        init(id)
+        res.status(200).json(robots[id])
+        return
+    }
     distance = req.params.distance || 10
     angle = robots[id].angle
 
@@ -200,21 +245,6 @@ app.get("/:id/forward/:distance", function(req, res) {
     },duration)
 })
 
-app.get("/:id/init", function(req, res){
-    id = req.params.id
-    robot = {
-        id: id,
-        x: 0,
-        y: 0,
-        angle: 0,
-        score: 0
-    }
-
-    robots[id] = robot
-
-    io.emit('init', robot)
-    res.status(200).json(robots[id])
-})
 
 
 
