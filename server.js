@@ -9,12 +9,13 @@ port = 8080;
 var robots  = {};
 var particles = {};
 
+// Screen size
 min_x = -100
 max_x = 100
-
 min_y = -100
 max_y = 100
 
+// Initialize the server
 var app = express();
 var server = require('http').createServer(app);
 var io = socketIO(server);
@@ -23,18 +24,6 @@ server.listen(port)
 
 app.set('views', __dirname + '/views')
 app.set('view engine', 'jade')
-//app.use(express.logger('dev'))
-
-/*
-setInterval( ()=>{
-    io.emit('move', {
-        id: 10,
-        x: Math.random()*30,
-        y: Math.random()*30,
-        s: 1000
-    })
-}, 2000)
-*/
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
@@ -45,41 +34,20 @@ app.all('/', function(req, res, next) {
   next();
  });
 
-
-app.get("/", function(req, res){
-    res.status(200).json(robots);
-})
-
-app.get("/robots", function(req, res){
-    res.status(200).json(robots);
-})
-
 app.get("/view", function (req, res){
     res.render('svg', {})
 });
 
-app.get("/svg", function(req, res){
-   html = '<svg width="640" height="480">'
-   for (id in robots) {
-     robot = robots[id]
-     color = robot.color || 'white'
-     name = robot.name || id
-     html += '<line x1="' + (robot.x) + '" y1="' + (robot.y) +'" x2="' + (robot.x + 20*Math.cos(robot.angle))+ '" y2="' + (robot.y + 20*Math.sin(robot.angle)) + '" stroke-width="2" stroke="black" />'
-     html += '<circle cx="' + (robot.x) + '" cy="' + (robot.y) +'" r="3" stroke="green" stroke-width="1" fill="' + color + '" />'
-     html += '<text text-anchor="middle" x="' + (robot.x) + '" y="' + (robot.y - 5) +'">' + name + '</text>'
-   }
-   html += '</svg>'
-   res.send(html)
-})
+/********************
+  * ROBOT ENDPOINTS *
+  ********************/
 
-
-
-/* ROBOT ENDPOINTS */
-
+// Create a new robot
 init = (id) => {
     if (id in robots) {
         return
     }
+
     robot = {
         id: id,
         x: 0,
@@ -87,36 +55,41 @@ init = (id) => {
         angle: 0,
         score: 0
     }
-
     robots[id] = robot
-
     io.emit('init', robot)
 }
 
+// Rotate an existing robot
 rotate = (id, angle, res) => {
     old_angle = robots[id].angle
     robots[id].angle += angle
+    ms = 250
 
     io.emit('rotate', {
         id: id,
         angle: robots[id].angle,
-        s: 250
+        s: ms
     })
 
     setTimeout(()=>{
         res.status(200).json(robots[id])
-    },250)
+    }, ms)
 }
 
+// Return all existing robots
+app.get("/robots", function(req, res){
+    res.status(200).json(robots);
+})
+
+// Initiate a robot
 app.get("/robots/:id/init", function(req, res){
     id = req.params.id
     init(id)
     res.status(200).json(robots[id])
 })
 
-
+// Rotate the robot left
 app.get(["/robots/:id/left", "/robots/:id/left/:angle"], function(req, res) {
-
     id = req.params.id 
     if (!(id in robots)){
         init(id)
@@ -128,6 +101,7 @@ app.get(["/robots/:id/left", "/robots/:id/left/:angle"], function(req, res) {
     rotate(id, -angle, res)
 })
 
+// Rotate the robot right
 app.get(["/robots/:id/right", "/robots/:id/right/:angle"], function(req, res) {
     id = req.params.id 
     if (!(id in robots)){
@@ -140,6 +114,56 @@ app.get(["/robots/:id/right", "/robots/:id/right/:angle"], function(req, res) {
     rotate(id, angle, res)
 })
 
+// Move an existing robot forward by :distance pixels
+app.get(["/robots/:id/forward/:distance", "/robots/:id/forward"], function(req, res) {
+    id = req.params.id
+    if (!(id in robots)){
+        init(id)
+        res.status(200).json(robots[id])
+        return
+    }
+    distance = req.params.distance || 10
+    angle = robots[id].angle
+
+    old_x = robots[id].x
+    old_y = robots[id].y
+
+    robots[id].x += Math.cos(angle) * distance
+    robots[id].y += Math.sin(angle) * distance
+    if (robots[id].x > 90) {
+        robots[id].x = 90
+    }
+
+    if (robots[id].x < -90) {
+        robots[id].x = -90
+    }
+
+    if (robots[id].y > 90) {
+        robots[id].y = 90
+    }
+
+    if (robots[id].y < -90) {
+        robots[id].y = -90
+    }
+
+    pixels_per_second = 100
+    dx = old_x - robots[id].x
+    dy = old_y - robots[id].y
+    duration = 1000*Math.sqrt(dx**2 + dy**2)/pixels_per_second
+
+    io.emit('move', {
+        id : id,
+        x: robots[id].x,
+        y: robots[id].y,
+        s: duration
+    })
+
+    setTimeout(()=>{
+        res.status(200).json(robots[id])
+    },duration)
+})
+
+// Pickup any nearby particles
 app.get("/robots/:id/pickup", function(req, res){
     robot_id = req.params.id
     if (!(robot_id in robots)){
@@ -195,61 +219,13 @@ app.get("/robots/:id/pickup", function(req, res){
         io.emit('particle', particles)
     },1000)
 
-    res.status(200).json(robots[id])
-})
-
-app.get(["/robots/:id/forward/:distance", "/robots/:id/forward"], function(req, res) {
-    id = req.params.id
-    if (!(id in robots)){
-        init(id)
-        res.status(200).json(robots[id])
-        return
-    }
-    distance = req.params.distance || 10
-    angle = robots[id].angle
-
-    old_x = robots[id].x
-    old_y = robots[id].y
-
-    robots[id].x += Math.cos(angle) * distance
-    robots[id].y += Math.sin(angle) * distance
-    if (robots[id].x > 90) {
-        robots[id].x = 90
-    }
-
-    if (robots[id].x < -90) {
-        robots[id].x = -90
-    }
-
-    if (robots[id].y > 90) {
-        robots[id].y = 90
-    }
-
-    if (robots[id].y < -90) {
-        robots[id].y = -90
-    }
-
-    pixels_per_second = 100
-    dx = old_x - robots[id].x
-    dy = old_y - robots[id].y
-    duration = 1000*Math.sqrt(dx**2 + dy**2)/pixels_per_second
-
-    io.emit('move', {
-        id : id,
-        x: robots[id].x,
-        y: robots[id].y,
-        s: duration
-    })
-
     setTimeout(()=>{
         res.status(200).json(robots[id])
-    },duration)
+    }, 1500)
 })
 
 
-
-
-
+// Every few seconds, create a new particle
 setInterval(()=>{
     x = Math.random() * (max_x - min_x) + min_x
     y = Math.random() * (max_y - min_y) + min_y

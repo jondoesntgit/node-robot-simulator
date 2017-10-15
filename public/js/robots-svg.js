@@ -8,7 +8,7 @@ pickup_radius = 30
 var robots = {}
 var particles = {}
 particleRadius = 2
-textOffset = -20
+textOffset = -10
 
 
 createRobot = (id, robot) => {
@@ -18,16 +18,8 @@ createRobot = (id, robot) => {
     robots[id].label = s.text(robot.x, robot.y + textOffset, `${id}: ${robot.score}`).attr({"text-anchor": "middle"})
 }
 
-$.get('/robots', (robots_data) => {
-    for (id in robots_data) {
-        createRobot(id, robots_data[id])
-        robot = robots_data[id]   
-    }
-})
 
-
-
-function moveRobot(id, x, y, ms) {
+moveRobot = (id, x, y, ms) => {
     r = robots[id]
     r.x = x
     r.y = y
@@ -43,7 +35,7 @@ function moveRobot(id, x, y, ms) {
     }, ms)
 }
 
-function rotateRobot(id, angle, ms) {
+rotateRobot = (id, angle, ms) => {
     r = robots[id]
     r.angle = angle
     x = r.x
@@ -67,6 +59,25 @@ removeParticle = (id) => {
     delete particles[id]
 }
 
+// Start by loading all robots
+
+$.get('/robots', (robots_data) => {
+    for (id in robots_data) {
+        createRobot(id, robots_data[id])
+        robot = robots_data[id]   
+    }
+})
+
+/*************************
+  * Define Socket Events *
+  *************************/
+
+// When we hear that a robot is being initiated
+socket.on('init', (data) => {
+    createRobot(data.id, data)
+})
+
+// When we hear that a robot is moving...
 socket.on('move', function (data) {
     id = data.id
     x = data.x
@@ -76,6 +87,7 @@ socket.on('move', function (data) {
     moveRobot(id, x, y, ms)
 });
 
+// When we hear that a robot is rotating...
 socket.on('rotate', function (data) {
     id = data.id
     angle = data.angle
@@ -84,6 +96,7 @@ socket.on('rotate', function (data) {
     rotateRobot(id, angle, ms)
 });
 
+// When we hear that a robot is picking up stuff near it...
 socket.on('pickup', function(data){
     robot = robots[data.id]
     x = robot.x
@@ -102,10 +115,7 @@ socket.on('pickup', function(data){
     }, 1400)
 })
 
-socket.on('init', (data) => {
-    createRobot(data.id, data)
-})
-
+// When we hear that a new particle is being added
 socket.on('particle', (data) => {
     for (id in data) {
         if (id in particles) {continue}
