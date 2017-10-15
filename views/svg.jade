@@ -7,6 +7,19 @@ head
 
 
 body
-  svg(id="svg", width="200px", height="200px", viewBox="-100 -100 200 200")
+  div(align="center")
+    svg(id="svg", width="640px", height="480px", viewBox="-320 -240 640 480")
 
+  div
+    p.
+      Visit <a href="//robots.simpledoesit.com/jupyter">robots.simpledoesit.com/jupyter</a> in order to control your robot.
+
+    ul
+      li <code>from pyrobots import *</code> will load up the simulator
+      li <code>init()</code> will create your robot and render it on the screen
+      li <code>forward(10)</code> will move your robot forward 10 units
+      li <code>right(90)</code> will turn your robot right 90 degrees
+      li <code>left(90)</code> will turn your robot left 90 degrees
+      li <code>name('Bob')</code> will rename your robot 'Bob'
+      li <code>color('blue')</code> will change your robot to a blue color
   script(src="/js/robots-svg.js")

@@ -17,7 +17,7 @@ def init():
     global robot_id
     if not robot_id:
         robot_id = random.randint(1, 1000)
-    requests.get(base + '/robots/%i/init' % robot_id)
+    r = requests.get(base + '/robots/%i/init' % robot_id)
     return json.loads(r.text)
 
 

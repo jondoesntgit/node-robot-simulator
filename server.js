@@ -10,10 +10,13 @@ var robots  = {};
 var particles = {};
 
 // Screen size
-min_x = -100
-max_x = 100
-min_y = -100
-max_y = 100
+min_x = -320
+max_x = 320
+min_y = -240
+max_y = 240
+margin = 20
+
+max_particles = 100
 
 // Initialize the server
 var app = express();
@@ -139,20 +142,20 @@ app.get(["/robots/:id/forward/:distance", "/robots/:id/forward"], function(req, 
 
     robots[id].x += Math.cos(angle) * distance
     robots[id].y += Math.sin(angle) * distance
-    if (robots[id].x > 90) {
-        robots[id].x = 90
+    if (robots[id].x > max_x - margin) {
+        robots[id].x = max_x - margin
     }
 
-    if (robots[id].x < -90) {
-        robots[id].x = -90
+    if (robots[id].x < min_x + margin) {
+        robots[id].x = min_x + margin
     }
 
-    if (robots[id].y > 90) {
-        robots[id].y = 90
+    if (robots[id].y > max_y - margin) {
+        robots[id].y = max_y - margin
     }
 
-    if (robots[id].y < -90) {
-        robots[id].y = -90
+    if (robots[id].y < min_y + margin) {
+        robots[id].y = min_y + margin
     }
 
     pixels_per_second = 100
@@ -262,8 +265,12 @@ app.get("/particles", function(req, res){
 
 // Every few seconds, create a new particle
 setInterval(()=>{
-    x = Math.random() * (max_x - min_x) + min_x
-    y = Math.random() * (max_y - min_y) + min_y
+    if (Object.keys(particles).length >= max_particles){
+        return
+    }
+
+    x = Math.random() * (max_x - min_x - 2*margin) + min_x + margin
+    y = Math.random() * (max_y - min_y - 2*margin) + min_y + margin
     id = Date.now()
     rand = Math.random()
     if (rand < .4){
@@ -285,4 +292,4 @@ setInterval(()=>{
     }
     particles[id] = {x: x, y: y, color: color, score: score, radius: radius}
     io.emit('particle', particles)
-}, 5000)
+}, 1000)
