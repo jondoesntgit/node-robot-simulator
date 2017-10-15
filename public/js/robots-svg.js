@@ -8,15 +8,20 @@ pickup_radius = 30
 var robots = {}
 var particles = {}
 particleRadius = 2
+textOffset = -20
 
 
+createRobot = (id, robot) => {
+    robots[id] = robot
+    robots[id].head = s.circle(robot.x, robot.y, robot_radius);
+    robots[id].vector = s.line(robot.x, robot.y, robot.x + vectorLength * Math.cos(robot.angle), robot.y + vectorLength * Math.sin(robot.angle));   
+    robots[id].label = s.text(robot.x, robot.y + textOffset, `${id}: ${robot.score}`).attr({"text-anchor": "middle"})
+}
 
 $.get('/robots', (robots_data) => {
     for (id in robots_data) {
-        robot = robots_data[id]
-        robots[id] = robot
-        robots[id].head = s.circle(robot.x, robot.y, robot_radius);
-        robots[id].vector = s.line(robot.x, robot.y, robot.x + vectorLength * Math.cos(robot.angle), robot.y + vectorLength * Math.sin(robot.angle));        
+        createRobot(id, robots_data[id])
+        robot = robots_data[id]   
     }
 })
 
@@ -29,6 +34,7 @@ function moveRobot(id, x, y, ms) {
     angle = r.angle
 
     robots[id].head.animate({cx: x, cy: y}, ms)
+    robots[id].label.animate({x: x, y: y + textOffset}, ms)
     robots[id].vector.animate({
         x1: x, 
         y1: y, 
@@ -88,6 +94,8 @@ socket.on('pickup', function(data){
     pickupCircle.animate({r: pickup_radius}, 400)
     setTimeout(() => {
         pickupCircle.animate({r: 0}, 400)
+        robot.score = data.newScore
+        robot.label.attr({text: `${robot.id}: ${robot.score}`})
     }, 1000)
     setTimeout(() => {
         pickupCircle.remove()
@@ -95,12 +103,7 @@ socket.on('pickup', function(data){
 })
 
 socket.on('init', (data) => {
-    id = data.id
-    robot = data
-    robots[id] = robot
-    robots[id].head = s.circle(robot.x, robot.y, robot_radius);
-    robots[id].vector = s.line(robot.x, robot.y, robot.x + vectorLength * Math.cos(robot.angle), robot.y + vectorLength * Math.sin(robot.angle));        
-
+    createRobot(data.id, data)
 })
 
 socket.on('particle', (data) => {

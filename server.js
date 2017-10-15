@@ -128,16 +128,21 @@ app.get("/:id/pickup", function(req, res){
         }
     }
 
-    console.log(particles_to_remove)
+    particlesAcquired = particles_to_remove.length
 
     particles_to_remove.forEach((id) => {
         console.log('Removing' + id)
         delete particles[id]
     })
 
+    oldScore = robots[robot_id].score
+    newScore = oldScore + particlesAcquired
+    robots[robot_id].score = newScore
+
 
     io.emit('pickup', {
         id: robot_id,
+        newScore: newScore
     })
 
     setTimeout(()=>{
@@ -197,18 +202,17 @@ app.get("/:id/forward/:distance", function(req, res) {
 
 app.get("/:id/init", function(req, res){
     id = req.params.id
-    robots[id] = {
-        x: 0,
-        y: 0,
-        angle: 0
-    }
-
-    io.emit('init', {
+    robot = {
         id: id,
         x: 0,
         y: 0,
-        angle: 0
-    })
+        angle: 0,
+        score: 0
+    }
+
+    robots[id] = robot
+
+    io.emit('init', robot)
     res.status(200).json(robots[id])
 })
 
