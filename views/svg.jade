@@ -12,14 +12,18 @@ body
 
   div
     p.
-      Visit <a href="//robots.simpledoesit.com/jupyter">robots.simpledoesit.com/jupyter</a> in order to control your robot.
+      Visit <a target="_blank" href="//jupyter.simpledoesit.com:8888">jupyter.simpledoesit.com:8888</a> in order to control your robot.
+    
+    p. 
+      Create a new notebook and save it as your name. Then execute the following code
 
     ul
-      li <code>from pyrobots import *</code> will load up the simulator
+      li <code>from pyrobot import *</code> will load up the simulator
       li <code>init()</code> will create your robot and render it on the screen
+      li <code>name('Bob')</code> will rename your robot 'Bob'
+      li <code>color('blue')</code> will change your robot to a blue color
       li <code>forward(10)</code> will move your robot forward 10 units
       li <code>right(90)</code> will turn your robot right 90 degrees
       li <code>left(90)</code> will turn your robot left 90 degrees
-      li <code>name('Bob')</code> will rename your robot 'Bob'
-      li <code>color('blue')</code> will change your robot to a blue color
+      li <code>pickup()</code> will pick up all of the dots near your robot.
   script(src="/js/robots-svg.js")

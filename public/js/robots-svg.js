@@ -109,7 +109,7 @@ socket.on('pickup', function(data){
     x = robot.x
     y = robot.y
     color = robot.color || 'black'
-    pickupCircle = s.circle(x, y, 0).attr({
+    let pickupCircle = s.circle(x, y, 0).attr({
         fill: color
     })
     pickupCircle.animate({r: pickup_radius}, 400)

@@ -16,7 +16,7 @@ min_y = -240
 max_y = 240
 margin = 20
 
-max_particles = 100
+max_particles = 1000
 
 // Initialize the server
 var app = express();
@@ -37,9 +37,6 @@ app.all('/', function(req, res, next) {
   next();
  });
 
-app.get("/view", function (req, res){
-    res.render('svg', {})
-});
 
 /********************
   * ROBOT ENDPOINTS *
@@ -191,7 +188,6 @@ app.get("/robots/:id/pickup", function(req, res){
         dy = robot.y - particle.y
 
         in_reach = (Math.sqrt(dx**2 + dy**2) < pickup_radius)
-        console.log(in_reach)
         return in_reach
     }
 
@@ -235,7 +231,6 @@ app.get("/robots/:id/pickup", function(req, res){
 })
 
 app.get("/robots/:id/color/:color", function(req, res){
-    console.log('COLOR' + req.params.color)
     id = req.params.id
     color = req.params.color
     robots[id].color = color
@@ -261,6 +256,9 @@ app.get("/particles", function(req, res){
     res.status(200).json(particles);
 })
 
+app.get(["", "/"], function (req, res){
+    res.render('svg', {})
+});
 
 
 // Every few seconds, create a new particle
@@ -273,15 +271,15 @@ setInterval(()=>{
     y = Math.random() * (max_y - min_y - 2*margin) + min_y + margin
     id = Date.now()
     rand = Math.random()
-    if (rand < .4){
+    if (rand < .8){
         color = 'black'
         score = 1
         radius = 1
-    } else if (rand < .7) {
+    } else if (rand < .92) {
         color = 'green'
         score = 3
         radius = 2
-    } else if (rand < .9) {
+    } else if (rand < .99) {
         color = 'blue'
         score = 5
         radius = 3
@@ -292,4 +290,4 @@ setInterval(()=>{
     }
     particles[id] = {x: x, y: y, color: color, score: score, radius: radius}
     io.emit('particle', particles)
-}, 1000)
+}, 100)
